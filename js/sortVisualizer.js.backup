@@ -1,0 +1,280 @@
+/* last updated:<2018/04/09/Mon 22:38:18 from:biela-lenovo-s510> */
+
+variable = [];                  // 乱数で生成した値を格納(値を変更しない)
+array = [];                     // variable の値をソートするための変数
+progress = [];                  // 実行したソートの手順を格納
+count = 0;                      // 現在，ソート手順の何番目まで実行したか
+flag = false;                   // showProgress を実行しても良いか
+separatorW = 0;
+screenW = 800;
+screenH = 450;
+separatorN = 0;                 // ソートする値の個数
+max = 20;                       // 値の最大値
+interval = 0;                   // 経過を表示する際のインターバル
+
+function sortVisualizer() {
+  init();
+
+  // button
+  $("#start_stop").on('click', function() {
+    flag = !flag;
+    if(flag == true) {
+      $("#sort option").attr({"disabled": "disabled"});
+      setTimeout(showProgress, interval);
+      $("#start_stop").html("stop");
+    } else {
+      $("#sort option").removeAttr("disabled");
+      $("#start_stop").html("start");
+    }
+  });
+
+  $("#fast").on('click', function() {
+    interval -= 10;
+    if(interval < 0) interval = 0;
+    setInfo();
+  });
+
+  $("#slow").on('click', function() {
+    interval += 10;
+    setInfo();
+  });
+
+  $("#inc").on('click', function() {
+    if(flag == false) {
+      separatorN += 1;
+      reset();
+    }
+  });
+
+  $("#dec").on('click', function() {
+    if(flag == false) {
+      separatorN -= 1;
+      if(separatorN < 2) separatorN = 2;
+      reset();
+    }
+  });
+
+  $("#sort").change(function() {
+    reset(false);
+  });
+
+  $("#reset").on('click', function() {
+    if(flag == false) {
+      init();
+    }
+  });
+  // slider
+  $("#progBar").on('input', function() {
+    adjustProgress(count-1, parseInt($(this).val() - count));
+  });
+}
+
+// 初期設定
+function init() {
+  $("#sort").val("bubbleSort");
+  separatorN = 30;
+  interval = 70;
+  setConfig();
+  setVariable();
+  setScreen();
+  doSort();
+  setInfo();
+}
+
+function showProgress() {
+  // ソート終了後にもう一度 start ボタンが押された時のエラー処理
+  if(progress.length <= count) {
+    setButton();
+    return 0;
+  }
+  var set = [];
+  if(0 != count) {
+    set = progress[count-1];
+    $("#sep"+set[0]+" .variable").removeClass("selected");
+    $("#sep"+set[1]+" .variable").removeClass("selected");
+  }
+  count += 1;
+  swapHeightOfDiv(count-1);
+  if(2 < set.length) $("#sep"+set[2]+" .variable").addClass("sorted");
+  if(count-1 < progress.length && flag) {
+    setTimeout(showProgress, interval);
+  } else {
+    setButton();
+  }
+  if(count == progress.length) {
+    $(".variable").addClass("completed"); // ソート完了のクラスを追加
+  }
+  setInfo();
+}
+
+function adjustProgress(base, diff) {
+  var sign = 1;                 // plus or minus
+  if(diff == 0) return;
+  else if(diff < 0) {
+    sign = -1;
+    diff *= -1;
+  }
+  count += (sign * diff);
+  for(var i = 1; i <= diff; i++) {
+    if(0 < sign) swapHeightOfDiv(base + sign*i);
+    else swapHeightOfDiv(base + sign*i + 1)
+  }
+
+  // screen の色を更新
+  if(count == progress.length) {
+    $(".variable").addClass("completed");    // ソート完了のクラスを追加
+  } else  {
+    $(".variable").removeClass("completed"); // ソート完了のクラスを除去
+  }
+  if(count == 0) {
+    $(".variable").removeClass("selected");
+  }
+  setInfo();
+}
+
+// progress の index番目の配列の 0, 1番目の要素の高さを入れ替える
+function swapHeightOfDiv(index) {
+  if(index == progress.length-1) setButton();
+  var set = progress[index];
+  $(".variable").removeClass("selected");
+  $("#sep"+set[0]+" .variable").addClass("selected");
+  $("#sep"+set[1]+" .variable").addClass("selected");
+  var h1 = $("#sep"+set[0]+" .variable").height();
+  var h2 = $("#sep"+set[1]+" .variable").height();
+  $("#sep"+set[0]+" .variable").height(h2);
+  $("#sep"+set[1]+" .variable").height(h1);
+  if(2 < set.length) $("#sep"+set[2]+" .variable").toggleClass("sorted");
+}
+
+function reset(unsetVar = true) {
+  setConfig();
+  if(unsetVar) setVariable();
+  setScreen();
+  doSort();
+  setInfo();
+}
+
+function setConfig() {
+  count = 0;
+  setButton();
+}
+
+function setButton() {
+  flag = false;
+  $("#sort option").removeAttr("disabled");
+  $("#start_stop").html("start");
+}
+
+function setVariable() {
+  variable = [];
+  for(var i = 0; i < separatorN; i++) {
+    variable.push(1 + Math.floor(Math.random() * max));
+  }
+}
+
+// screen の初期設定
+function setScreen() {
+  separatorW = screenW / separatorN;
+  $("#screen").html("");
+  for(var i = 0; i < separatorN; i++) {
+    $("#screen").append('<div id="sep'+i+'" class="separator"></div>');
+    $("#sep"+i).html('<div class="variable"></div>');
+    var h = screenH * variable[i] / max;
+    $("#sep"+i).css({"left": separatorW*i + "px"});
+    $("#sep"+i+" .variable").animate({"height": h+"px"}, 0, "swing");
+  }
+  $(".separator").css({"width": separatorW+"px"});
+}
+
+function doSort() {
+  array = copyArray(variable);
+  progress = [];
+  eval($("#sort").val() + "()");
+}
+
+function setInfo() {
+  var str = "";
+  str += "<span class='tag'>interval: </span>" + interval + "ms";
+  str += "<span class='tag'>num: </span>" + separatorN;
+  str += "<span class='tag'>progress: </span>" +count+"/"+progress.length;
+  $("#info").html(str);
+
+  // progress bar
+  $("#progBar").val(count);
+  $("#progBar").attr({"max": progress.length});
+}
+
+function copyArray(variable) {
+  var newArray = [];
+  for(var i = 0; i < variable.length; i++) {
+    newArray.push(variable[i]);
+  }
+  return newArray;
+}
+
+// sort ################
+function bubbleSort() {
+  for(var i = 0; i < array.length; i++) {
+    for(var j = 0; j < array.length - i - 1; j++) {
+      if(array[j] > array[j+1]) {
+        swap(array, j, j+1);
+      }
+    }
+    recordSorted(array.length-1-i);
+  }
+}
+
+function quickSort(left = 0, right = array.length) {
+  var pivot = array[left];
+  var pivotPos = left;
+  for(var i = left+1; i <= right; i++) {
+    if(array[i] < pivot) {
+      pivotPos += 1;
+      swap(array, pivotPos, i);
+    }
+  }
+  swap(array, left, pivotPos);
+  recordSorted(pivotPos);
+  if(left < pivotPos-1) quickSort(left, pivotPos-1);
+  if(pivotPos+1 < right) quickSort(pivotPos+1, right);
+}
+
+function shakerSort() {
+  // ソート済みの個数
+  var left = 0, right = 0;
+  for(var i = 0; left + right < array.length; i++) {
+    for(var j = left; j < array.length - right - 1; j++) {
+      if(array[j] > array[j+1]) {
+        swap(array, j, j+1);
+      }
+    }
+    right += 1;
+    recordSorted(array.length-right);
+    for(var j = array.length - right - 1; left < j; j--) {
+      if(array[j-1] > array[j]) {
+        swap(array, j-1, j);
+      }
+    }
+    left += 1;
+    recordSorted(left-1);
+  }
+}
+
+// ソート済みの要素を記録
+function recordSorted(num) {
+  progress[progress.length-1].push(num);
+}
+
+// 配列の指定要素の値を入れ替える
+function swap(array, num1, num2) {
+  if(num1 == num2) return;
+  var temp;
+  temp = array[num1];
+  array[num1] = array[num2];
+  array[num2] = temp;
+  progress.push([num1, num2]);
+}
+
+$(function() {
+  sortVisualizer();
+});

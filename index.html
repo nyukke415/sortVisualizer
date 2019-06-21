@@ -1,0 +1,50 @@
+<!-- last updated:<2018/04/22/Sun 17:36:10 from:halley-FMVS76G> -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <title>sortVisualizer</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="./sty/sortVisualizer.css">
+    <script src="./jquery/jquery-3.3.1.min.js"></script>
+    <script src="./js/sortVisualizer.js"></script>
+  </head>
+  <body>
+    <div id="title">sortVisualizer</div>
+
+    <div id="mainContentWrapper">
+      <div id="main">
+        <div id="screen"></div>
+        <!-- slider -->
+        <input id="progBar" type="range" value="1" min="0" max="10" step="1">
+        <!-- button -->
+        <div id="buttonArea">
+          <div id="start_stop" class="button"></div>
+          <div id="speed" class="buttonWrapper">
+            <div id="slow" class="miniButton">-</div>
+            <span id="speedInfo">speed</span>
+            <div id="fast" class="miniButton">+</div>
+          </div>
+          <div id="num" class="buttonWrapper">
+            <div id="dec" class="miniButton">-</div>
+            <span id="numInfo">num</span>
+            <div id="inc" class="miniButton">+</div>
+          </div>
+          <div id="reset" class="button">reset</div>
+          <select id="sort">
+            <option value="quickSort">クイックソート</option>
+            <option value="bubbleSort">バブルソート</option>
+            <option value="shakerSort">シェーカーソート</option>
+          </select>
+        </div>
+        <!-- info -->
+        <div id="info"></div>
+        <div id="foo"></div>
+      </div>
+    </div>
+  </body>
+</html>
